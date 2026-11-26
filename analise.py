@@ -30,15 +30,13 @@ import numpy as np
 import pandas as pd
 from scipy import stats
 
-# ---------------------------------------------------------------------------
-# Parâmetros fixados no protocolo (antes de olhar os dados)
-# ---------------------------------------------------------------------------
+# Parâmetros do protocolo
 HF_REPO = "hao-li/AIDev"
-HF_REVISION = "v3"          # versão fixa da base (MSR 2026 Mining Challenge)
+HF_REVISION = "v3"          # versão usada no MSR 2026
 ALPHA = 0.05
 SEED = 2026
 N_BOOT = 2000
-LIMIAR_MERGE_INSTANTANEO_MIN = 1.0   # usado só na análise exploratória 2
+LIMIAR_MERGE_INSTANTANEO_MIN = 1.0   # só na exploratória 2
 
 ROOT = Path(__file__).resolve().parent
 DIR_LIMPOS = ROOT / "dados" / "limpos"
@@ -48,9 +46,7 @@ for d in (DIR_LIMPOS, DIR_RES, DIR_FIG):
     d.mkdir(parents=True, exist_ok=True)
 
 
-# ---------------------------------------------------------------------------
 # 1. Carga dos dados brutos
-# ---------------------------------------------------------------------------
 def caminho_tabela(nome: str) -> Path:
     pasta = os.environ.get("AIDEV_DATA_DIR")
     if pasta:
@@ -85,9 +81,7 @@ def carregar() -> pd.DataFrame:
     return bruto
 
 
-# ---------------------------------------------------------------------------
 # 2. Limpeza (regras do protocolo)
-# ---------------------------------------------------------------------------
 def limpar(bruto: pd.DataFrame) -> tuple[pd.DataFrame, dict]:
     log = {"bruto_agente": int((bruto.grupo == "Agente de IA").sum()),
            "bruto_humano": int((bruto.grupo == "Humano").sum())}
@@ -103,12 +97,12 @@ def limpar(bruto: pd.DataFrame) -> tuple[pd.DataFrame, dict]:
     # VD: horas entre abertura e merge
     df["horas_ate_merge"] = (df["merged_at"] - df["created_at"]).dt.total_seconds() / 3600
 
-    # R2: remove tempos inválidos (negativos ou ausentes)
+    # R2: tira tempos negativos ou vazios
     invalidos = df["horas_ate_merge"].isna() | (df["horas_ate_merge"] < 0)
     log["excluidos_tempo_invalido"] = int(invalidos.sum())
     df = df[~invalidos]
 
-    # R3: só repositórios que têm PRs dos dois grupos (comparação justa)
+    # R3: só repositórios com PRs dos dois grupos
     repos_ag = set(df.loc[df.grupo == "Agente de IA", "repo_url"])
     repos_hu = set(df.loc[df.grupo == "Humano", "repo_url"])
     comuns = repos_ag & repos_hu
@@ -122,16 +116,14 @@ def limpar(bruto: pd.DataFrame) -> tuple[pd.DataFrame, dict]:
     return df, log
 
 
-# ---------------------------------------------------------------------------
 # 3. Estatística
-# ---------------------------------------------------------------------------
 def efeito_A(x: np.ndarray, y: np.ndarray) -> float:
     """A de Vargha-Delaney = P(X > Y) + 0,5 P(X = Y), como na Aula 08."""
     return float(stats.mannwhitneyu(x, y, alternative="two-sided").statistic / (len(x) * len(y)))
 
 
 def magnitude_A(a: float) -> str:
-    """Limiares de Vargha e Delaney (2000): 0,56 / 0,64 / 0,71 (simétricos em torno de 0,5)."""
+    """Limiares de Vargha e Delaney (2000): 0,56 / 0,64 / 0,71."""
     dist = abs(a - 0.5)
     if dist < 0.06:
         return "desprezível"
@@ -199,7 +191,7 @@ def teste_principal(df: pd.DataFrame, rng) -> dict:
     }
 
 
-# --- Análises exploratórias (fora da hipótese confirmatória) ---------------
+# Análises exploratórias
 def exploratoria_blocos(df: pd.DataFrame) -> dict:
     """Cada repositório é um bloco: mediana do agente x mediana humana."""
     med = df.groupby(["repo_url", "grupo"])["horas_ate_merge"].median().unstack()
@@ -222,13 +214,11 @@ def exploratoria_sem_instantaneos(df: pd.DataFrame, rng) -> dict:
     return r
 
 
-# ---------------------------------------------------------------------------
 # 4. Figura
-# ---------------------------------------------------------------------------
 def figura(df: pd.DataFrame) -> None:
     plt.rcParams.update({"font.family": "serif", "font.size": 9})
     grupos = ["Humano", "Agente de IA"]
-    # piso de 1 min só para caber no eixo log (não altera nenhuma estatística)
+    # piso de 1 min por causa do eixo log
     dados = [np.clip(df.loc[df.grupo == g, "horas_ate_merge"], 1 / 60, None) for g in grupos]
     fig, ax = plt.subplots(figsize=(3.3, 2.4))
     ax.boxplot(dados, showfliers=False, widths=0.5,
@@ -248,7 +238,6 @@ def figura(df: pd.DataFrame) -> None:
     plt.close(fig)
 
 
-# ---------------------------------------------------------------------------
 def main() -> None:
     rng = np.random.default_rng(SEED)
     df, log = limpar(carregar())
