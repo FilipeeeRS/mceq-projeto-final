@@ -1,0 +1,82 @@
+Colunas pull_request:       ['id', 'number', 'title', 'body', 'agent', 'user_id', 'user', 'state', 'created_at', 'closed_at', 'merged_at', 'repo_id', 'repo_url', 'html_url']
+Colunas human_pull_request: ['id', 'number', 'title', 'user', 'user_id', 'state', 'created_at', 'closed_at', 'merged_at', 'repo_url', 'html_url', 'body', 'agent']
+
+Bruto: 33,596 PRs de agentes | 6,618 PRs humanos
+
+Limpeza: {
+  "bruto_agente": 33596,
+  "bruto_humano": 6618,
+  "apos_merged_agente": 24014,
+  "apos_merged_humano": 5081,
+  "excluidos_tempo_invalido": 0,
+  "repos_em_comum": 520,
+  "final_agente": 5292,
+  "final_humano": 4828
+}
+
+Descritiva (horas até o merge):
+                  n  media_h     dp_h   Q1_h  mediana_h    Q3_h    p90_h  pct_merge_menos_1min
+grupo                                                                                        
+Agente de IA  5292   52.518  153.698  0.240      2.388  25.736  134.038                 5.688
+Humano        4828   58.495  188.205  0.417      3.840  29.154  140.592                 5.282
+
+Teste principal: {
+  "teste": "Mann-Whitney U bilateral",
+  "n_agente": 5292,
+  "n_humano": 4828,
+  "mediana_agente_h": 2.388055555555556,
+  "mediana_humano_h": 3.840138888888889,
+  "dif_medianas_h": -1.4520833333333334,
+  "IC95_dif_medianas_h": [
+    -2.08071875,
+    -0.872378472222223
+  ],
+  "U": 11960682.0,
+  "p_valor": 2.914358645172095e-08,
+  "alpha": 0.05,
+  "rejeita_H0": true,
+  "A_vargha_delaney": 0.4681325581875943,
+  "IC95_A": [
+    0.4575406801022443,
+    0.4794922385033826
+  ],
+  "magnitude": "desprezível",
+  "cliff_delta_equivalente": -0.06373488362481139
+}
+
+ {
+  "teste": "Wilcoxon pareado por repositório (exploratória)",
+  "n_repos": 520,
+  "mediana_das_diferencas_h": 0.1375,
+  "pct_repos_agente_mais_rapido": 48.26923076923077,
+  "W": 61436.5,
+  "p_valor": 0.06637060950178895,
+  "r_bisserial": 0.09292041931197402
+}
+
+ {
+  "teste": "Mann-Whitney sem merges < 1 min (exploratória)",
+  "n_agente": 4991,
+  "n_humano": 4573,
+  "mediana_agente_h": 3.013333333333333,
+  "mediana_humano_h": 4.898055555555556,
+  "dif_medianas_h": -1.8847222222222224,
+  "IC95_dif_medianas_h": [
+    -2.577006944444444,
+    -1.2040277777777786
+  ],
+  "U": 10639855.0,
+  "p_valor": 1.0397562210573273e-08,
+  "alpha": 0.05,
+  "rejeita_H0": true,
+  "A_vargha_delaney": 0.4661728088473094,
+  "IC95_A": [
+    0.45523018625741507,
+    0.47773508935370784
+  ],
+  "magnitude": "desprezível",
+  "cliff_delta_equivalente": -0.06765438230538123,
+  "excluidos": 556
+}
+
+Arquivos salvos em resultados/ e figuras/.
